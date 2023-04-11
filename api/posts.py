@@ -37,3 +37,16 @@ def posts():
     db.session.commit()
 
     return row_to_dict(post), 200
+
+
+@api.route("/api/posts", methods=["GET"])
+@auth_required
+def fetch_posts():
+    """
+    Fetch posts that have at least one of the authors specified in the authorIds parameter in the request.
+    """
+    author_ids = request.args.get("authorIds", None)
+    sort_by = request.args.get("sortBy", "id")
+    direction = request.args.get("direction", "asc")
+
+    return jsonify(author_ids)
