@@ -49,4 +49,4 @@ def fetch_posts():
     sort_by = request.args.get("sortBy", "id")
     direction = request.args.get("direction", "asc")
 
-    return jsonify(author_ids)
+    return jsonify({”author_ids”: author_ids}), 200
