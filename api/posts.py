@@ -59,7 +59,8 @@ def fetch_posts():
     for author in author_ids_list:
         posts_of_authors.extend(Post.get_posts_by_user_id(author))
 
-    posts_data = {}
+    posts_data = {} # Dictionary helps ensure that each post shows up once in 
+    # the data structure because each key of `post.id` is unique
     for post in posts_of_authors:
         posts_data[post.id] = {"likes": post.likes, 
                                "popularity": post.popularity,
