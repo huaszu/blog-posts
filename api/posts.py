@@ -45,8 +45,15 @@ def fetch_posts():
     """
     Fetch blog posts that have at least one of the authors specified.
     """
-    author_ids = request.args.get("authorIds", None)
+    author_ids_string = request.args.get("authorIds", None)
     sort_by = request.args.get("sortBy", "id")
     direction = request.args.get("direction", "asc")
 
-    return jsonify({"authorIds": author_ids, "sortBy": sort_by, "direction": direction}), 200
+    # print(author_ids_string)
+    # print(type(author_ids_string)) # string
+
+    author_ids_list = []
+    for author_id in author_ids_string.split(","):
+        author_ids_list.append(int(author_id))
+
+    return jsonify({"authorIds": author_ids_string, "sortBy": sort_by, "direction": direction}), 200
