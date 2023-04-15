@@ -62,20 +62,21 @@ def fetch_posts():
     posts_data = {} # Dictionary helps ensure that each post shows up once in 
     # the data structure because each key of `post.id` is unique
     for post in posts_of_authors:
-        posts_data[post.id] = {"likes": post.likes, 
+        posts_data[post.id] = {"id": post.id, # This key-value pair is redundant with the outer dictionary key.  What problems are we causing?
+                               "likes": post.likes, 
                                "popularity": post.popularity,
                                "reads": post.reads,
                                "tags": post._tags.split(","),
                                "text": post.text}
 
+    def sort_posts_on(item):
+        return item[1][sort_by]
+    
+    sorted_posts = sorted(posts_data.items(), key=sort_posts_on) # a list of tuples
+    print(sorted_posts)
+
     result_list = []
-    for post_id, post_details in posts_data.items():
-        result_list.append({"id": post_id, 
-                "likes": post_details["likes"],
-                "popularity": post_details["popularity"],
-                "reads": post_details["reads"],
-                "tags": post_details["tags"],
-                "text": post_details["text"]
-                })
+    for post_tuple in sorted_posts:
+        result_list.append(post_tuple[1])
 
     return jsonify({"posts": result_list}), 200
