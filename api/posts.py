@@ -58,6 +58,9 @@ def fetch_posts():
 
     for author in author_ids_list:
         posts_of_authors.extend(Post.get_posts_by_user_id(author))
+        # Later could combine with code on lines 65 through 73 by nesting
+        # for loop to go through each of this author's posts and generate
+        # posts_data dictionary without making posts_of_authors list
 
     posts_data = {} # Dictionary helps ensure that each post shows up once in 
     # the data structure because each key of `post.id` is unique
@@ -81,7 +84,8 @@ def fetch_posts():
         reverse_boolean = True
     
     sorted_posts = sorted(posts_data.items(), key=sort_posts_on,reverse=reverse_boolean) # a list of tuples
-
+    # Alternative: Have SQLAlchemy help sort posts when querying database on line 60
+    
     result_list = []
     for post_tuple in sorted_posts:
         result_list.append(post_tuple[1])
