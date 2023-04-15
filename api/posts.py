@@ -51,7 +51,8 @@ def fetch_posts():
 
     author_ids_list = []
     for author_id in author_ids_string.split(","):
-        author_ids_list.append(int(author_id))
+        if author_id not in author_ids_list:
+            author_ids_list.append(int(author_id))
 
     posts_of_authors = [] # list of Post objects
 
@@ -60,15 +61,11 @@ def fetch_posts():
 
     posts_data = {}
     for post in posts_of_authors:
-        # print(post._tags)
-        # print(post.text)
         posts_data[post.id] = {"likes": post.likes, 
                                "popularity": post.popularity,
                                "reads": post.reads,
                                "tags": post._tags.split(","),
                                "text": post.text}
-    
-    # print(posts_data)
 
     result_list = []
     for post_id, post_details in posts_data.items():
