@@ -71,9 +71,16 @@ def fetch_posts():
 
     def sort_posts_on(item):
         return item[1][sort_by]
+
+    if direction == "asc":
+        reverse_boolean = False
+    if direction == "desc": # Specify instead of writing `else:` so as not to 
+        # unnecessarily assign a value to reverse_boolean when user 
+        # accidentally types a string other than "asc" or "desc" for 
+        # `direction` query parameter
+        reverse_boolean = True
     
-    sorted_posts = sorted(posts_data.items(), key=sort_posts_on) # a list of tuples
-    print(sorted_posts)
+    sorted_posts = sorted(posts_data.items(), key=sort_posts_on,reverse=reverse_boolean) # a list of tuples
 
     result_list = []
     for post_tuple in sorted_posts:
