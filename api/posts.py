@@ -49,11 +49,15 @@ def fetch_posts():
     sort_by = request.args.get("sortBy", "id")
     direction = request.args.get("direction", "asc")
 
-    # print(author_ids_string)
-    # print(type(author_ids_string)) # string
-
     author_ids_list = []
     for author_id in author_ids_string.split(","):
         author_ids_list.append(int(author_id))
+
+    # print(author_ids_list)
+
+    posts_of_authors = [] # list of Post objects
+
+    for author in author_ids_list:
+        posts_of_authors.extend(Post.get_posts_by_user_id(author))
 
     return jsonify({"authorIds": author_ids_string, "sortBy": sort_by, "direction": direction}), 200
