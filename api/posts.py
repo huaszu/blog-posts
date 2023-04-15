@@ -10,6 +10,7 @@ from middlewares import auth_required
 
 
 POSTS_SORT_BY_OPTIONS = ["id", "reads", "likes", "popularity"]
+POSTS_SORT_DIRECTION_OPTIONS = ["asc", "desc"]
 
 
 @api.post("/posts")
@@ -58,12 +59,7 @@ def fetch_posts():
         return jsonify({"error": "Unacceptable value for `sortBy` parameter.  We can sort by id, reads, likes, or popularity."}), 400
 
     direction = request.args.get("direction", "asc")
-
-    if direction == "asc":
-        reverse_boolean = False
-    elif direction == "desc": 
-        reverse_boolean = True
-    else:
+    if direction not in POSTS_SORT_DIRECTION_OPTIONS:
         return jsonify({"error": "Unacceptable value for `direction` parameter.  We only accept asc or desc."}), 400
 
     author_ids_list = []
@@ -96,8 +92,13 @@ def fetch_posts():
     def sort_posts_on(item):
         return item[1][sort_by]
 
+    if direction == "asc":
+        reverse_boolean = False
+    else: 
+        reverse_boolean = True
+
     sorted_posts = sorted(posts_data.items(), key=sort_posts_on, reverse=reverse_boolean) # a list of tuples
-    # Alternative: Have SQLAlchemy help sort posts when querying database on line 60
+    # Alternative: Have SQLAlchemy help sort posts when querying database on line 80
     
     result_list = []
     for post_tuple in sorted_posts:
