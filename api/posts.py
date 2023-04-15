@@ -39,11 +39,11 @@ def posts():
     return row_to_dict(post), 200
 
 
-@api.route("/posts-of-authors", methods=["GET"])
+@api.route("/posts", methods=["GET"])
 @auth_required
 def fetch_posts():
     """
-    Fetch blog posts that have at least one of the authors specified in the authorIds parameter in the request.
+    Fetch blog posts that have at least one of the authors specified.
     """
     author_ids = request.args.get("authorIds", None)
     sort_by = request.args.get("sortBy", "id")
