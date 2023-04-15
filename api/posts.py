@@ -53,11 +53,31 @@ def fetch_posts():
     for author_id in author_ids_string.split(","):
         author_ids_list.append(int(author_id))
 
-    # print(author_ids_list)
-
     posts_of_authors = [] # list of Post objects
 
     for author in author_ids_list:
         posts_of_authors.extend(Post.get_posts_by_user_id(author))
 
-    return jsonify({"authorIds": author_ids_string, "sortBy": sort_by, "direction": direction}), 200
+    posts_data = {}
+    for post in posts_of_authors:
+        # print(post._tags)
+        # print(post.text)
+        posts_data[post.id] = {"likes": post.likes, 
+                               "popularity": post.popularity,
+                               "reads": post.reads,
+                               "tags": post._tags.split(","),
+                               "text": post.text}
+    
+    # print(posts_data)
+
+    result_list = []
+    for post_id, post_details in posts_data.items():
+        result_list.append({"id": post_id, 
+                "likes": post_details["likes"],
+                "popularity": post_details["popularity"],
+                "reads": post_details["reads"],
+                "tags": post_details["tags"],
+                "text": post_details["text"]
+                })
+
+    return jsonify({"posts": result_list}), 200
