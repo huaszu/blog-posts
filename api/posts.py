@@ -9,8 +9,8 @@ from db.utils import row_to_dict
 from middlewares import auth_required
 
 
-POSTS_SORT_BY_OPTIONS = ["id", "reads", "likes", "popularity"]
-POSTS_SORT_DIRECTION_OPTIONS = ["asc", "desc"]
+POSTS_SORT_BY_OPTIONS: list[str] = ["id", "reads", "likes", "popularity"]
+POSTS_SORT_DIRECTION_OPTIONS: list[str] = ["asc", "desc"]
 
 
 @api.post("/posts")
@@ -49,37 +49,37 @@ def fetch_posts():
     """
     Fetch blog posts that have at least one of the authors specified.
     """
-    author_ids_string = request.args.get("authorIds", None)
+    author_ids_input: str = request.args.get("authorIds", None)
 
-    if author_ids_string is None:
+    if author_ids_input is None:
         return jsonify({"error": "Please identify the author(s) whose posts to fetch using the query parameter key `authorIds`"}), 400
 
-    sort_by = request.args.get("sortBy", "id")
-    if sort_by not in POSTS_SORT_BY_OPTIONS:
+    sort_by_input: str = request.args.get("sortBy", "id")
+    if sort_by_input not in POSTS_SORT_BY_OPTIONS:
         return jsonify({"error": "Unacceptable value for `sortBy` parameter.  We can sort by id, reads, likes, or popularity."}), 400
 
-    direction = request.args.get("direction", "asc")
-    if direction not in POSTS_SORT_DIRECTION_OPTIONS:
+    direction_input: str = request.args.get("direction", "asc")
+    if direction_input not in POSTS_SORT_DIRECTION_OPTIONS:
         return jsonify({"error": "Unacceptable value for `direction` parameter.  We only accept asc or desc."}), 400
 
-    author_ids_list = []
+    author_ids: list[int] = []
 
     try:
-        for author_id in author_ids_string.split(","):
-            if author_id not in author_ids_list:
-                author_ids_list.append(int(author_id))
+        for author_id in author_ids_input.split(","):
+            if author_id not in author_ids:
+                author_ids.append(int(author_id))
     except:
         return jsonify({"error": "Please provide a query parameter value for `authorIds` as a number or as numbers separated by commas, such as '1,2'."}), 400
 
-    posts_of_authors = [] # list of Post objects
+    posts_of_authors: list[Post] = []
 
-    for author in author_ids_list:
-        # Later could combine with code on lines 86 through 94 by nesting
+    for author in author_ids:
+        # Later could combine with code on lines 84 through 90 by nesting
         # for loop to go through each of this author's posts and generate
         # posts_data dictionary without making posts_of_authors list
         posts_of_authors.extend(Post.get_posts_by_user_id(author))
 
-    posts_data = {} # Dictionary helps ensure that each post shows up once in 
+    posts_data: dict[int, dict] = {} # Dictionary helps ensure that each post shows up once in 
     # the data structure because each key of `post.id` is unique
     for post in posts_of_authors:
         posts_data[post.id] = {"id": post.id, # This key-value pair is redundant with the outer dictionary key.  What problems are we causing?
@@ -90,18 +90,18 @@ def fetch_posts():
                                "text": post.text}
 
     def sort_posts_on(item):
-        return item[1][sort_by]
+        return item[1][sort_by_input]
 
-    if direction == "asc":
-        reverse_boolean = False
+    if direction_input == "asc":
+        reverse_boolean: bool = False
     else: 
-        reverse_boolean = True
+        reverse_boolean: bool = True
 
-    sorted_posts = sorted(posts_data.items(), key=sort_posts_on, reverse=reverse_boolean) # a list of tuples
+    sorted_posts: list[tuple] = sorted(posts_data.items(), key=sort_posts_on, reverse=reverse_boolean)
     # Alternative: Have SQLAlchemy help sort posts when querying database on line 80
     
-    result_list = []
-    for post_tuple in sorted_posts:
-        result_list.append(post_tuple[1])
+    result: list[dict] = []
+    for post_response in sorted_posts:
+        result.append(post_response[1])
 
-    return jsonify({"posts": result_list}), 200
+    return jsonify({"posts": result}), 200
