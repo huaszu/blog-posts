@@ -99,6 +99,12 @@ def fetch_posts():
 
     sorted_posts: list[tuple] = sorted(posts_data.items(), key=sort_posts_on, reverse=reverse_boolean)
     # Alternative: Have SQLAlchemy help sort posts when querying database on line 80
+    # Not sure how much this alternative helps because we query database by
+    # author id and ultimately we want to sort not on author id, but on
+    # post id, reads, likes, or popularity.  There could be some benefit of, 
+    # for each author, sorting by the desired one of the four sort by options
+    # at the point of querying the database, and then preparing the final sort
+    # later.  That could be investigated.
     
     result: list[dict] = []
     for post_response in sorted_posts:
