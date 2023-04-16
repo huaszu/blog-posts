@@ -71,23 +71,17 @@ def fetch_posts():
     except:
         return jsonify({"error": "Please provide a query parameter value for `authorIds` as a number or as numbers separated by commas, such as '1,2'."}), 400
 
-    posts_of_authors: list[Post] = []
-
-    for author in author_ids:
-        # Later could combine with code on lines 84 through 90 by nesting
-        # for loop to go through each of this author's posts and generate
-        # posts_data dictionary without making posts_of_authors list
-        posts_of_authors.extend(Post.get_posts_by_user_id(author))
-
     posts_data: dict[int, dict] = {} # Dictionary helps ensure that each post shows up once in 
     # the data structure because each key of `post.id` is unique
-    for post in posts_of_authors:
-        posts_data[post.id] = {"id": post.id, # This key-value pair is redundant with the outer dictionary key.  What problems are we causing?
-                               "likes": post.likes, 
-                               "popularity": post.popularity,
-                               "reads": post.reads,
-                               "tags": post._tags.split(","),
-                               "text": post.text}
+
+    for author_id in author_ids:
+        for post in Post.get_posts_by_user_id(author_id):
+            posts_data[post.id] = {"id": post.id, # This key-value pair is redundant with the outer dictionary key.  What problems are we causing?
+                                   "likes": post.likes, 
+                                   "popularity": post.popularity,
+                                   "reads": post.reads,
+                                   "tags": post._tags.split(","),
+                                   "text": post.text}
 
     def sort_posts_on(item):
         return item[1][sort_by_input]
@@ -98,7 +92,7 @@ def fetch_posts():
         reverse_boolean: bool = True
 
     sorted_posts: list[tuple] = sorted(posts_data.items(), key=sort_posts_on, reverse=reverse_boolean)
-    # Alternative: Have SQLAlchemy help sort posts when querying database on line 80
+    # Alternative: Have SQLAlchemy help sort posts when querying database on line 80.
     # Not sure how much this alternative helps because we query database by
     # author id and ultimately we want to sort not on author id, but on
     # post id, reads, likes, or popularity.  There could be some benefit of, 
