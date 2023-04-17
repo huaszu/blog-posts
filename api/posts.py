@@ -114,9 +114,7 @@ def fetch_posts():
     # for each author, sorting by the desired one of the four sort by options
     # at the point of querying the database, and then preparing the final sort
     # later.  That could be investigated.
-    
-    result: list[dict] = []
-    for post_response in sorted_posts:
-        result.append(post_response[1])
+
+    result: list[dict] = [post_response[1] for post_response in sorted_posts]
 
     return jsonify({"posts": result}), 200
