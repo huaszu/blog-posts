@@ -8,7 +8,7 @@ from db.models.post import Post
 from db.utils import row_to_dict
 from middlewares import auth_required
 
-import crud
+import util.crud
 
 
 POSTS_SORT_BY_OPTIONS: list[str] = ["id", "reads", "likes", "popularity"]
@@ -64,13 +64,8 @@ def fetch_posts():
     if direction not in POSTS_SORT_DIRECTION_OPTIONS:
         return jsonify({"error": "Unacceptable value for `direction` parameter.  We only accept asc or desc."}), 400
 
-    parsed_author_ids: set[int] = set()
-
     try:
-        for author_id in author_ids.split(","):
-            parsed_author_id = int(author_id)
-            if crud.check_user_exists(parsed_author_id):
-                parsed_author_ids.add(parsed_author_id)
+        parsed_author_ids: set[int] = set(int(author_id) for author_id in author_ids.split(",") if util.crud.check_user_exists(int(author_id)))
     except:
         return jsonify({"error": "Please provide a query parameter value for `authorIds` as a number or as numbers separated by commas, such as '1,5'."}), 400
 
