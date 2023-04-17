@@ -77,8 +77,8 @@ def fetch_posts():
     posts_of_authors: set[Post] = set()
 
     for parsed_author_id in parsed_author_ids:
-        for post in Post.get_posts_by_user_id(parsed_author_id):
-            posts_of_authors.add(post)
+        posts_of_author: set[Post] = set(post for post in Post.get_posts_by_user_id(parsed_author_id))
+        posts_of_authors.update(posts_of_author)
    
     if not posts_of_authors: # If posts_of_authors is empty, the later code to
         # populate the `posts_data` dictionary will give an error so let's 
