@@ -72,7 +72,7 @@ def fetch_posts():
     if not parsed_author_ids: # Also helps to avoid the problem that subsequently 
         # running `Post.query.with_parent(user).all()` on users that do not 
         # exist will give an error
-        return jsonify({"error": "None of the author id(s) you requested exist in the database."}), 200
+        return jsonify({"warning": "None of the author id(s) you requested exist in the database."}), 200
 
     posts_of_authors: set[Post] = set()
 
