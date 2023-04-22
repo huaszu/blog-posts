@@ -51,6 +51,11 @@ def fetch_posts():
     """
     Fetch blog posts that have at least one of the authors specified.
     """
+    # validation
+    user = g.get("user")
+    if user is None:
+        return abort(401)
+
     author_ids: str = request.args.get("authorIds", None)
 
     if author_ids is None:
