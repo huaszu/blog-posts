@@ -56,6 +56,8 @@ def fetch_posts():
     if user is None:
         return abort(401)
 
+    # Fetch posts
+
     author_ids: str = request.args.get("authorIds", None)
 
     if author_ids is None:
@@ -123,3 +125,26 @@ def fetch_posts():
     result: list[dict] = [post_response[1] for post_response in sorted_posts]
 
     return jsonify({"posts": result}), 200
+
+
+@api.route("/posts/<postId>", methods=["PATCH"])
+@auth_required
+def update_post(postId):
+    """
+    Update blog post, if it exists in the database.  Return updated blog post.
+    """
+    # validation
+    user = g.get("user")
+    if user is None:
+        return abort(401)
+
+    data = request.get_json(force=True)
+    author_ids = data.get("authorIds", None)
+    tags = data.get("tags", None)
+    text = data.get("text", None)
+
+    # Update post
+    post = Post.get_post_by_post_id(postId)
+    print(post)
+ 
+    return jsonify(200) 
