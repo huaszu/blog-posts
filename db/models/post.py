@@ -35,3 +35,6 @@ class Post(db.Model):
     def get_posts_by_user_id(user_id):
         user = User.query.get(user_id)
         return Post.query.with_parent(user).all()
+
+    def get_post_by_post_id(post_id):
+        return Post.query.get(post_id)
