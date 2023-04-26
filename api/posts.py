@@ -138,6 +138,8 @@ def update_post(postId):
     if user is None:
         return abort(401)
 
+    # Update post
+
     post = Post.get_post_by_post_id(postId)
     print(post.users)
     print(post._tags)
@@ -155,33 +157,11 @@ def update_post(postId):
         post.text = data["text"]
     db.session.commit()
 
-    # Update post
-
-
-    # if author_ids is not None:
-    #     # print("TEST", User.query.filter(User.id.in_(author_ids)).all())
-    #     authors = User.query.filter(User.id.in_(author_ids)).all()
-    #     for author in authors:
-    #         UserPost.query.get((user.id, ))
-    #     # post.users = authors
-    #     db.session.commit()
-    #     print("Authors done")
-    # if text is not None:
-    #     post.text = text
-    #     db.session.commit()
-    #     print("Text done")
-    # if tags is not None:
-    #     post.tags = tags
-    #     db.session.commit()
-    #     print("Tags done")
-
-    # # db.session.commit()
-    # print("Do we get here?")
-
     post = Post.get_post_by_post_id(postId)
     print(post.users)
     print(post._tags)
     print(post.text)
 
+    print("CHECK", row_to_dict(post))
     return jsonify(200)  
     # return row_to_dict(post), 200  
