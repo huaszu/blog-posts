@@ -36,5 +36,6 @@ class Post(db.Model):
         user = User.query.get(user_id)
         return Post.query.with_parent(user).all()
 
+    @staticmethod
     def get_post_by_post_id(post_id):
         return Post.query.get(post_id)

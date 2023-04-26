@@ -3,7 +3,7 @@ from flask import jsonify, request, g, abort
 from api import api
 from db.shared import db
 from db.models.user_post import UserPost
-from db.models.post import Post
+from db.models.post import Post, User
 
 from db.utils import row_to_dict
 from middlewares import auth_required
@@ -138,13 +138,50 @@ def update_post(postId):
     if user is None:
         return abort(401)
 
+    post = Post.get_post_by_post_id(postId)
+    print(post.users)
+    print(post._tags)
+    print(post.text)
+
     data = request.get_json(force=True)
-    author_ids = data.get("authorIds", None)
-    tags = data.get("tags", None)
-    text = data.get("text", None)
+    if "authorIds" in data:
+        UserPost.query.filter_by(post_id=postId).delete()
+        for author_id in data["authorIds"]:
+            user_post = UserPost(user_id=author_id, post_id=postId)
+            db.session.add(user_post)
+    if "tags" in data:
+        post.tags = data["tags"]
+    if "text" in data:
+        post.text = data["text"]
+    db.session.commit()
 
     # Update post
+
+
+    # if author_ids is not None:
+    #     # print("TEST", User.query.filter(User.id.in_(author_ids)).all())
+    #     authors = User.query.filter(User.id.in_(author_ids)).all()
+    #     for author in authors:
+    #         UserPost.query.get((user.id, ))
+    #     # post.users = authors
+    #     db.session.commit()
+    #     print("Authors done")
+    # if text is not None:
+    #     post.text = text
+    #     db.session.commit()
+    #     print("Text done")
+    # if tags is not None:
+    #     post.tags = tags
+    #     db.session.commit()
+    #     print("Tags done")
+
+    # # db.session.commit()
+    # print("Do we get here?")
+
     post = Post.get_post_by_post_id(postId)
-    print(post)
- 
-    return jsonify(200) 
+    print(post.users)
+    print(post._tags)
+    print(post.text)
+
+    return jsonify(200)  
+    # return row_to_dict(post), 200  
