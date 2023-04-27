@@ -182,7 +182,10 @@ def update_post(postId):
             
         post.tags = list(set(tags))
     if "text" in data:
-        post.text = data["text"]
+        text = data["text"]
+        if type(text) is not str:
+            return jsonify({"error": "Please input the post text as a string."}), 400
+        post.text = text
     db.session.commit()
 
     post = Post.get_post_by_post_id(postId)
