@@ -137,7 +137,7 @@ def update_post(postId):
     user = g.get("user")
     post = Post.get_post_by_post_id(postId)
     if user.id not in [author.id for author in post.users]:
-        return abort(401)
+        return jsonify({"error": "Only an author of a post can update that post."}), 401
 
     # Update post
 
