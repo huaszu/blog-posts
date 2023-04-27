@@ -173,7 +173,7 @@ def update_post(postId):
             if type(tag) is not str:
                 return jsonify({"error": "Please check that each tag is a string."}), 400
             
-        post.tags = list(set(tags))
+        post.tags = tags
     if "text" in data:
         text = data["text"]
         if type(text) is not str:
