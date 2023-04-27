@@ -190,7 +190,7 @@ def update_post(postId):
 
     post = Post.get_post_by_post_id(postId)
     print(post.users)
-    print(post._tags)
+    print(post.tags)
     print(post.text)
 
     post_response: dict = {"id": post.id, 
@@ -198,7 +198,7 @@ def update_post(postId):
                            "likes": post.likes, 
                            "popularity": post.popularity,
                            "reads": post.reads,
-                           "tags": post.tags,
+                           "tags": sorted(post.tags),
                            "text": post.text} 
 
     return jsonify({"post": post_response}), 200
