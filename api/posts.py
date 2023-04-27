@@ -135,12 +135,12 @@ def update_post(postId):
     """
     # validation
     user = g.get("user")
-    if user is None:
+    post = Post.get_post_by_post_id(postId)
+    if user.id not in [author.id for author in post.users]:
         return abort(401)
 
     # Update post
 
-    post = Post.get_post_by_post_id(postId)
     print(post.users)
     print(post._tags)
     print(post.text)
