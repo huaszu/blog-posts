@@ -134,8 +134,14 @@ def update_post(postId):
     Update blog post, if it exists in the database.  Return updated blog post.
     """
     # validation
+    try:
+        post = Post.get_post_by_post_id(int(postId))
+        if post is None:
+            return jsonify({"warning": "The post you requested does not exist in the database."}), 200
+    except:
+        return jsonify({"error": "Please use a number to represent the id of the post you want to update.  A sample acceptable path: /api/posts/1 versus a sample unacceptable path: /api/posts/one"}), 400
+
     user = g.get("user")
-    post = Post.get_post_by_post_id(postId)
     if user.id not in [author.id for author in post.users]:
         return jsonify({"error": "Only an author of a post can update that post."}), 401
 
