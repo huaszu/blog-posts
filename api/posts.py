@@ -5,7 +5,7 @@ from db.shared import db
 from db.models.user_post import UserPost
 from db.models.post import Post, User
 
-from db.utils import row_to_dict
+from db.utils import row_to_dict, rows_to_list
 from middlewares import auth_required
 
 import util.crud
@@ -91,6 +91,8 @@ def fetch_posts():
         # populate the `posts_data` dictionary will give an error so let's 
         # avoid that
         return jsonify({"posts": []}), 200
+
+    print("CHECK", rows_to_list(list(posts_of_authors)))
 
     posts_data: dict[int, dict] = {} 
 
