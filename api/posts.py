@@ -96,11 +96,11 @@ def fetch_posts():
 
     for post in posts_of_authors:
         posts_data[post.id] = {"id": post.id, # This key-value pair is redundant with the outer dictionary key.  What problems are we causing?
-                                "likes": post.likes, 
-                                "popularity": post.popularity,
-                                "reads": post.reads,
-                                "tags": post._tags.split(","),
-                                "text": post.text}        
+                               "likes": post.likes, 
+                               "popularity": post.popularity,
+                               "reads": post.reads,
+                               "tags": post._tags.split(","),
+                               "text": post.text}         
         # Alternative: For each post, make a dictionary in the format of the 
         # inner dictionary above.  Have a list of these dictionaries.  Later 
         # can sort the list as desired.  However, generating this outer 
@@ -162,20 +162,12 @@ def update_post(postId):
     print(post._tags)
     print(post.text)
 
-    # post_response: dict = {"id": post.id, 
-    #                        "authorIds": [user.id for user in post.users],
-    #                             "likes": post.likes, 
-    #                             "popularity": post.popularity,
-    #                             "reads": post.reads,
-    #                             "tags": post.tags,
-    #                             "text": post.text} 
-    
-    return jsonify({"post": {
-                      "id": post.id,
-                      "authorIds": [user.id for user in post.users],
-                      "likes": post.likes, 
-                      "popularity": post.popularity,
-                      "reads": post.reads,
-                      "tags": post.tags,
-                      "text": post.text
-                    }}), 200
+    post_response: dict = {"id": post.id, 
+                           "authorIds": [user.id for user in post.users],
+                           "likes": post.likes, 
+                           "popularity": post.popularity,
+                           "reads": post.reads,
+                           "tags": post.tags,
+                           "text": post.text} 
+
+    return jsonify({"post": post_response}), 200
