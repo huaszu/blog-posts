@@ -172,7 +172,15 @@ def update_post(postId):
             user_post = UserPost(user_id=author_id, post_id=postId)
             db.session.add(user_post)
     if "tags" in data:
-        post.tags = data["tags"]
+        tags = data["tags"]
+        if type(tags) is not list:
+            return jsonify({"error": "Please use square brackets around the tag(s) that you want on the post.  Format your input for tags as an array of strings."}), 400
+
+        for tag in tags:
+            if type(tag) is not str:
+                return jsonify({"error": "Please check that each tag is a string."}), 400
+            
+        post.tags = list(set(tags))
     if "text" in data:
         post.text = data["text"]
     db.session.commit()
