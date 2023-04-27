@@ -170,6 +170,4 @@ def update_post(postId):
                                 "tags": post.tags,
                                 "text": post.text} 
 
-    print(post_response)
-    return jsonify(200)  
-    # return row_to_dict(post), 200  
+    return jsonify({"post": post_response}), 200
