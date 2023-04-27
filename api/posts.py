@@ -198,7 +198,7 @@ def update_post(postId):
                            "likes": post.likes, 
                            "popularity": post.popularity,
                            "reads": post.reads,
-                           "tags": sorted(post.tags),
+                           "tags": post.tags,
                            "text": post.text} 
 
     return jsonify({"post": post_response}), 200
