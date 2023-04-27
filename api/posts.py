@@ -8,6 +8,8 @@ from db.models.post import Post, User
 from db.utils import row_to_dict, rows_to_list
 from middlewares import auth_required
 
+from operator import itemgetter
+
 import util.crud
 
 
@@ -70,7 +72,7 @@ def fetch_posts():
         return jsonify({"error": "Unacceptable value for `direction` parameter.  We only accept asc or desc."}), 400
 
     try:
-        parsed_author_ids: set[int] = set(int(author_id) for author_id in author_ids.split(",") if crud.check_user_exists(int(author_id)))
+        parsed_author_ids: set[int] = set(int(author_id) for author_id in author_ids.split(",") if util.crud.check_user_exists(int(author_id)))
     except:
         return jsonify({"error": "Please provide a query parameter value for `authorIds` as a number or as numbers separated by commas, such as '1,5'."}), 400
 
@@ -84,39 +86,20 @@ def fetch_posts():
     posts_of_authors: set[Post] = set()
 
     for parsed_author_id in parsed_author_ids:
-        posts_of_author: set[Post] = set(post for post in Post.get_posts_by_user_id(parsed_author_id))
-        posts_of_authors.update(posts_of_author)
-   
-    if not posts_of_authors: # If posts_of_authors is empty, the later code to
-        # populate the `posts_data` dictionary will give an error so let's 
-        # avoid that
+        try:
+            posts_of_author: set[Post] = set(post for post in Post.get_posts_by_user_id(parsed_author_id))
+            posts_of_authors.update(posts_of_author)
+        except: # since None is not iterable, there could be an error if there are no posts for that parsed_author_id
+            continue    
+    # If after this for loop, posts_of_authors is still an empty set, then there are no posts to return
+
+    if not posts_of_authors: 
         return jsonify({"posts": []}), 200
 
-    print("CHECK", rows_to_list(list(posts_of_authors)))
+    listed_posts_of_authors: list[dict] = rows_to_list(posts_of_authors)
+    sorted_posts: list[dict] = sorted(listed_posts_of_authors, key=itemgetter(sort_by), reverse=direction=="desc")
 
-    posts_data: dict[int, dict] = {} 
-
-    for post in posts_of_authors:
-        posts_data[post.id] = {"id": post.id, # This key-value pair is redundant with the outer dictionary key.  What problems are we causing?
-                               "likes": post.likes, 
-                               "popularity": post.popularity,
-                               "reads": post.reads,
-                               "tags": post.tags,
-                               "text": post.text}         
-        # Alternative: For each post, make a dictionary in the format of the 
-        # inner dictionary above.  Have a list of these dictionaries.  Later 
-        # can sort the list as desired.  However, generating this outer 
-        # dictionary of dictionaries seems more extensible and has better time
-        # complexity if we want to look up a post (though arguably we could 
-        # just access the db to get a post's info - depends on the context, 
-        # what the API user might want to do in the future, what access the 
-        # user has, whom and what we are building for, et al)                            
-
-    def sort_posts_on(item):
-        return item[1][sort_by]
-
-    sorted_posts: list[tuple] = sorted(posts_data.items(), key=sort_posts_on, reverse=direction=="desc")
-    # Alternative: Have SQLAlchemy help sort posts when querying database on line 85.
+    # Alternative: Have SQLAlchemy help sort posts when querying database on line 89.
     # Not sure how much this alternative helps because we query database by
     # author id and ultimately we want to sort not on author id, but on
     # post id, reads, likes, or popularity.  There could be some benefit of, 
@@ -124,7 +107,15 @@ def fetch_posts():
     # at the point of querying the database, and then preparing the final sort
     # later.  That could be investigated.
 
-    result: list[dict] = [post_response[1] for post_response in sorted_posts]
+    result = []
+
+    post_properties = list(sorted_posts[0].keys()) 
+    post_properties.sort() # Example in specification indicates that response 
+    # shows post properties in alphabetical order
+    
+    for post in sorted_posts:
+        post_response = {post_property: post[post_property] for post_property in post_properties}
+        result.append(post_response)
 
     return jsonify({"posts": result}), 200
 
