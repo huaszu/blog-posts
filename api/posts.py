@@ -148,13 +148,27 @@ def update_post(postId):
     # Update post
 
     print(post.users)
-    print(post._tags)
+    print(post.tags)
     print(post.text)
 
     data = request.get_json(force=True)
     if "authorIds" in data:
+        author_ids = data["authorIds"]
+
+        if type(author_ids) is not list:
+            return jsonify({"error": "Please use square brackets around the ids of the author(s) who should be the author(s) of the post you wish to update.  A sample acceptable input for authorIds: [1, 5] versus a sample unacceptable input for authorIds: 1,5"}), 400
+
+        deduplicated_author_ids = set(author_ids)
+
+        for author_id in deduplicated_author_ids:
+            if type(author_id) is not int:
+                return jsonify({"error": "Please check that each of your authorIds is a number."}), 400
+
+        if len(author_ids) != len(User.query.filter(User.id.in_(author_ids)).all()):
+            return jsonify({"error": "One or more authorIds provided is invalid.  Please check that each of your authorIds is an id of a user in the database."}), 400
+        
         UserPost.query.filter_by(post_id=postId).delete()
-        for author_id in data["authorIds"]:
+        for author_id in deduplicated_author_ids:
             user_post = UserPost(user_id=author_id, post_id=postId)
             db.session.add(user_post)
     if "tags" in data:
