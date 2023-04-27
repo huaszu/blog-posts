@@ -162,6 +162,14 @@ def update_post(postId):
     print(post._tags)
     print(post.text)
 
-    print("CHECK", row_to_dict(post))
+    post_response: dict = {"id": post.id, 
+                           "authorIds": [user.id for user in post.users],
+                                "likes": post.likes, 
+                                "popularity": post.popularity,
+                                "reads": post.reads,
+                                "tags": post.tags,
+                                "text": post.text} 
+
+    print(post_response)
     return jsonify(200)  
     # return row_to_dict(post), 200  
