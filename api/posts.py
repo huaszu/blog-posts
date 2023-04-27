@@ -56,8 +56,6 @@ def fetch_posts():
     if user is None:
         return abort(401)
 
-    # Fetch posts
-
     author_ids: str = request.args.get("authorIds", None)
 
     if author_ids is None:
@@ -72,7 +70,7 @@ def fetch_posts():
         return jsonify({"error": "Unacceptable value for `direction` parameter.  We only accept asc or desc."}), 400
 
     try:
-        parsed_author_ids: set[int] = set(int(author_id) for author_id in author_ids.split(",") if util.crud.check_user_exists(int(author_id)))
+        parsed_author_ids: set[int] = set(int(author_id) for author_id in author_ids.split(",") if crud.check_user_exists(int(author_id)))
     except:
         return jsonify({"error": "Please provide a query parameter value for `authorIds` as a number or as numbers separated by commas, such as '1,5'."}), 400
 
@@ -80,6 +78,8 @@ def fetch_posts():
         # running `Post.query.with_parent(user).all()` on users that do not 
         # exist will give an error
         return jsonify({"warning": "None of the author id(s) you requested exist in the database."}), 200
+
+    # Fetch posts 
 
     posts_of_authors: set[Post] = set()
 
@@ -99,7 +99,7 @@ def fetch_posts():
                                "likes": post.likes, 
                                "popularity": post.popularity,
                                "reads": post.reads,
-                               "tags": post._tags.split(","),
+                               "tags": post.tags,
                                "text": post.text}         
         # Alternative: For each post, make a dictionary in the format of the 
         # inner dictionary above.  Have a list of these dictionaries.  Later 
