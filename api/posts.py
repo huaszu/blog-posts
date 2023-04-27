@@ -162,12 +162,14 @@ def update_post(postId):
     print(post._tags)
     print(post.text)
 
-    post_response: dict = {"id": post.id, 
-                           "authorIds": [user.id for user in post.users],
-                                "likes": post.likes, 
-                                "popularity": post.popularity,
-                                "reads": post.reads,
-                                "tags": post.tags,
-                                "text": post.text} 
+    # post_response: dict = {"id": post.id, 
+    #                        "authorIds": [user.id for user in post.users],
+    #                             "likes": post.likes, 
+    #                             "popularity": post.popularity,
+    #                             "reads": post.reads,
+    #                             "tags": post.tags,
+    #                             "text": post.text} 
+    
+    post_response: list[tuple] = [("id", post.id), ("authorIds", [user.id for user in post.users]), ("likes", post.likes), ("popularity", post.popularity), ("reads", post.reads), ("tags", post.tags), ("text", post.text)]
 
-    return jsonify({"post": post_response}), 200
+    return jsonify({"post": {element[0]: element[1] for element in post_response}}), 200
