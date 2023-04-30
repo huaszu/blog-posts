@@ -8,8 +8,6 @@ from db.models.post import Post, User
 from db.utils import row_to_dict, rows_to_list
 from middlewares import auth_required
 
-from operator import itemgetter
-
 import util.crud
 
 
@@ -76,44 +74,27 @@ def fetch_posts():
     except:
         return jsonify({"error": "Please provide a query parameter value for `authorIds` as a number or as numbers separated by commas, such as '1,5'."}), 400
 
-    if not parsed_author_ids: # Also helps to avoid the problem that subsequently 
-        # running `Post.query.with_parent(user).all()` on users that do not 
-        # exist will give an error
+    if not parsed_author_ids: 
         return jsonify({"warning": "None of the author id(s) you requested exist in the database."}), 200
 
     # Fetch posts 
 
-    posts_of_authors: set[Post] = set()
-
-    for parsed_author_id in parsed_author_ids:
-        try:
-            posts_of_author: set[Post] = set(post for post in Post.get_posts_by_user_id(parsed_author_id))
-            posts_of_authors.update(posts_of_author)
-        except: # since None is not iterable, there could be an error if there are no posts for that parsed_author_id
-            continue    
-    # If after this for loop, posts_of_authors is still an empty set, then there are no posts to return
+    posts_of_authors: list[Post] = Post.get_posts_by_user_ids(user_ids = parsed_author_ids,
+                                                              sort_by=sort_by,
+                                                              direction=direction)
 
     if not posts_of_authors: 
         return jsonify({"posts": []}), 200
 
     listed_posts_of_authors: list[dict] = rows_to_list(posts_of_authors)
-    sorted_posts: list[dict] = sorted(listed_posts_of_authors, key=itemgetter(sort_by), reverse=direction=="desc")
-
-    # Alternative: Have SQLAlchemy help sort posts when querying database on line 89.
-    # Not sure how much this alternative helps because we query database by
-    # author id and ultimately we want to sort not on author id, but on
-    # post id, reads, likes, or popularity.  There could be some benefit of, 
-    # for each author, sorting by the desired one of the four sort by options
-    # at the point of querying the database, and then preparing the final sort
-    # later.  That could be investigated.
 
     result = []
 
-    post_properties = list(sorted_posts[0].keys()) 
+    post_properties = list(listed_posts_of_authors[0].keys()) 
     post_properties.sort() # Example in specification indicates that response 
     # shows post properties in alphabetical order
     
-    for post in sorted_posts:
+    for post in listed_posts_of_authors:
         post_response = {post_property: post[post_property] for post_property in post_properties}
         result.append(post_response)
 
