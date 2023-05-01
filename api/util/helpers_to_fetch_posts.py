@@ -25,7 +25,7 @@ def parse_author_ids(author_ids):
 
 
 def validate_parameters_to_fetch_posts(parameters):
-    # 400 Errors
+    # Check for 400 errors
     for parameter, value in parameters.items():
         if parameter in PARAMETERS_ACCEPTED_VALUES:
             acceptable = PARAMETERS_ACCEPTED_VALUES[parameter]
@@ -33,7 +33,7 @@ def validate_parameters_to_fetch_posts(parameters):
                 return {"error": f"Unacceptable value for {parameter} query parameter.  We only accept one of {acceptable}."}
     author_ids: str = parameters.get("authorIds", None)
     if author_ids is None:
-        return {"error": "Please identify the author(s) whose posts to fetch using the query parameter key `authorIds`."}
+        return {"error": "Please identify author(s) using the query parameter key `authorIds`."}
     
     # Either 400 with error message, 200 with warning message, or no problem
     else:
