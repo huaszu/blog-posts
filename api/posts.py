@@ -8,7 +8,7 @@ from db.models.post import Post, User
 from db.utils import row_to_dict, rows_to_list
 from middlewares import auth_required
 
-from api.util import helpers
+from api.util import helpers_to_fetch_posts, helpers_to_update_post
 
 
 @api.post("/posts")
@@ -55,7 +55,7 @@ def fetch_posts():
     parameters = request.args
 
     # Handle errors in query parameter inputs from user
-    result_of_parameter_checks = helpers.validate_parameters_to_fetch_posts(parameters)
+    result_of_parameter_checks = helpers_to_fetch_posts.validate_parameters_to_fetch_posts(parameters)
     if "error" in result_of_parameter_checks:
         return jsonify(result_of_parameter_checks), 400
     elif "warning" in result_of_parameter_checks:
@@ -68,7 +68,7 @@ def fetch_posts():
     direction: str = parameters.get("direction", "asc")
 
     # Fetch posts 
-    result = helpers.display_posts(parsed_author_ids=parsed_author_ids, 
+    result = helpers_to_fetch_posts.display_posts(parsed_author_ids=parsed_author_ids, 
                                    sort_by=sort_by, 
                                    direction=direction)
 
@@ -82,13 +82,14 @@ def update_post(postId):
     Update blog post, if it exists in the database.  Return updated blog post.
     """
     # validation
-    try:
-        post = Post.get_post_by_post_id(int(postId))
-        if post is None:
-            return jsonify({"warning": "The post you requested does not exist in the database."}), 200
-    except:
-        return jsonify({"error": "Please use a number to represent the id of the post you want to update.  A sample acceptable path: /api/posts/1 versus a sample unacceptable path: /api/posts/one"}), 400
-
+    result_of_post_id_check = helpers_to_update_post.validate_post_id(post_id=postId)
+    if "error" in result_of_post_id_check:
+        return jsonify(result_of_post_id_check), 400
+    elif "warning" in result_of_post_id_check:
+        return jsonify(result_of_post_id_check), 200
+    else:
+        post = result_of_post_id_check["post"]
+        
     user = g.get("user")
     if user.id not in [author.id for author in post.users]:
         return jsonify({"error": "Only an author of a post can update that post."}), 401
