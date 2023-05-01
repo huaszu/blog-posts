@@ -62,3 +62,18 @@ def update_text_of_post(post, parsed_json):
         return {"error": "Please input the post text as a string."}
     post.text = text   
     return {"success": True}
+
+
+def format_post_for_response(post_id):
+    post = Post.get_post_by_post_id(post_id=post_id)
+    post_response: dict = {"id": post.id, 
+                           "authorIds": [user.id for user in post.users],
+                           "likes": post.likes, 
+                           "popularity": post.popularity,
+                           "reads": post.reads,
+                           "tags": post.tags,
+                           "text": post.text} 
+    print(post.users)
+    print(post.tags)
+    print(post.text)
+    return post_response  

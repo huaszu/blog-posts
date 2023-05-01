@@ -119,17 +119,4 @@ def update_post(postId):
 
     db.session.commit()
 
-    post = Post.get_post_by_post_id(postId)
-    print(post.users)
-    print(post.tags)
-    print(post.text)
-
-    post_response: dict = {"id": post.id, 
-                           "authorIds": [user.id for user in post.users],
-                           "likes": post.likes, 
-                           "popularity": post.popularity,
-                           "reads": post.reads,
-                           "tags": post.tags,
-                           "text": post.text} 
-
-    return jsonify({"post": post_response}), 200
+    return jsonify({"post": helpers_to_update_post.format_post_for_response(post_id=postId)}), 200
