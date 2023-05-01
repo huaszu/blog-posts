@@ -8,7 +8,7 @@ from db.models.post import Post, User
 from db.utils import row_to_dict, rows_to_list
 from middlewares import auth_required
 
-import util.helpers
+from api.util import helpers
 
 
 @api.post("/posts")
@@ -58,7 +58,7 @@ def fetch_posts():
     parameters = request.args
 
     # Handle errors in query parameter inputs from user
-    result_of_parameter_checks = crud.validate_parameters_to_fetch_posts(parameters)
+    result_of_parameter_checks = helpers.validate_parameters_to_fetch_posts(parameters)
     if "error" in result_of_parameter_checks:
         return jsonify(result_of_parameter_checks), 400
     elif "warning" in result_of_parameter_checks:
@@ -71,25 +71,9 @@ def fetch_posts():
     direction: str = parameters.get("direction", "asc")
 
     # Fetch posts 
-
-    posts_of_authors: list[Post] = Post.get_posts_by_user_ids(user_ids = parsed_author_ids,
-                                                              sort_by=sort_by,
-                                                              direction=direction)
-
-    if not posts_of_authors: 
-        return jsonify({"posts": []}), 200
-
-    listed_posts_of_authors: list[dict] = rows_to_list(posts_of_authors)
-
-    result = []
-
-    post_properties = list(listed_posts_of_authors[0].keys()) 
-    post_properties.sort() # Example in specification indicates that response 
-    # shows post properties in alphabetical order
-    
-    for post in listed_posts_of_authors:
-        post_response = {post_property: post[post_property] for post_property in post_properties}
-        result.append(post_response)
+    result = helpers.display_posts(parsed_author_ids=parsed_author_ids, 
+                                   sort_by=sort_by, 
+                                   direction=direction)
 
     return jsonify({"posts": result}), 200
 
