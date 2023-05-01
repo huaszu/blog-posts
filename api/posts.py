@@ -52,9 +52,6 @@ def fetch_posts():
     if user is None:
         return abort(401)
 
-    # if author_ids is None:
-    #     return jsonify({"error": "Please identify the author(s) whose posts to fetch using the query parameter key `authorIds`."}), 400
-
     parameters = request.args
 
     # Handle errors in query parameter inputs from user
