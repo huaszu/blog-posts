@@ -50,7 +50,6 @@ def display_posts(parsed_author_ids, sort_by, direction):
     listed_posts_of_authors: list[dict] = rows_to_list(posts_of_authors)
 
     post_properties = [property.name for property in Post.__table__.columns]
-    print("CHECK ME!!!!", post_properties)
     post_properties.sort() # Example in specification indicates that response 
     # shows post properties in alphabetical order
     

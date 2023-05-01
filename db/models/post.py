@@ -38,7 +38,7 @@ class Post(db.Model):
         return Post.query.with_parent(user).all()
 
     @staticmethod
-    def get_posts_by_user_ids(user_ids: set, sort_by: str, direction: str) -> list:
+    def get_sorted_posts_by_user_ids(user_ids: set, sort_by: str, direction: str) -> list:
         query = Post.query.join(Post.users).filter(User.id.in_(user_ids)).distinct()
 
         if sort_by == "reads":
