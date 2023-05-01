@@ -8,11 +8,7 @@ from db.models.post import Post, User
 from db.utils import row_to_dict, rows_to_list
 from middlewares import auth_required
 
-import util.crud
-
-
-POSTS_SORT_BY_OPTIONS: list[str] = ["id", "reads", "likes", "popularity"]
-POSTS_SORT_DIRECTION_OPTIONS: list[str] = ["asc", "desc"]
+import util.helpers
 
 
 @api.post("/posts")
@@ -56,26 +52,23 @@ def fetch_posts():
     if user is None:
         return abort(401)
 
-    author_ids: str = request.args.get("authorIds", None)
+    # if author_ids is None:
+    #     return jsonify({"error": "Please identify the author(s) whose posts to fetch using the query parameter key `authorIds`."}), 400
 
-    if author_ids is None:
-        return jsonify({"error": "Please identify the author(s) whose posts to fetch using the query parameter key `authorIds`."}), 400
+    parameters = request.args
 
-    sort_by: str = request.args.get("sortBy", "id")
-    if sort_by not in POSTS_SORT_BY_OPTIONS:
-        return jsonify({"error": "Unacceptable value for `sortBy` parameter.  We can sort by id, reads, likes, or popularity."}), 400
+    # Handle errors in query parameter inputs from user
+    result_of_parameter_checks = crud.validate_parameters_to_fetch_posts(parameters)
+    if "error" in result_of_parameter_checks:
+        return jsonify(result_of_parameter_checks), 400
+    elif "warning" in result_of_parameter_checks:
+        return jsonify(result_of_parameter_checks), 200
+    else:
+        parsed_author_ids = result_of_parameter_checks["parsed_author_ids"]
+        
+    sort_by: str = parameters.get("sortBy", "id")
 
-    direction: str = request.args.get("direction", "asc")
-    if direction not in POSTS_SORT_DIRECTION_OPTIONS:
-        return jsonify({"error": "Unacceptable value for `direction` parameter.  We only accept asc or desc."}), 400
-
-    try:
-        parsed_author_ids: set[int] = set(int(author_id) for author_id in author_ids.split(",") if util.crud.check_user_exists(int(author_id)))
-    except:
-        return jsonify({"error": "Please provide a query parameter value for `authorIds` as a number or as numbers separated by commas, such as '1,5'."}), 400
-
-    if not parsed_author_ids: 
-        return jsonify({"warning": "None of the author id(s) you requested exist in the database."}), 200
+    direction: str = parameters.get("direction", "asc")
 
     # Fetch posts 
 
