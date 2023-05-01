@@ -2,6 +2,7 @@ from db.shared import db
 from db.models.user import User
 from db.models.post import Post
 from db.utils import rows_to_list
+from constants import MESSAGE_TYPE_AND_STATUS_CODE
 
 
 PARAMETERS_ACCEPTED_VALUES = {"sortBy": ["id", "reads", "likes", "popularity"],
@@ -18,10 +19,17 @@ def parse_author_ids(author_ids):
     try:
         parsed_author_ids: set[int] = set(int(author_id) for author_id in author_ids.split(",") if check_user_exists(int(author_id)))
         if not parsed_author_ids: 
-            return {"warning": "None of the author id(s) you requested exist in the database."}
-        return {"parsed_author_ids": parsed_author_ids}
+            error_or_warning = "warning"
+            return {"success": False, 
+                    "message": {error_or_warning: "None of the author id(s) you requested exist in the database."}, 
+                    "status_code": MESSAGE_TYPE_AND_STATUS_CODE[error_or_warning]}
+        return {"success": True,
+                "parsed_author_ids": parsed_author_ids}
     except:
-        return {"error": "Please provide a query parameter value for `authorIds` as a number or as numbers separated by commas, such as '1,5'."}
+        error_or_warning = "error"
+        return {"success": False, 
+                "message": {error_or_warning: "Please provide a query parameter value for `authorIds` as a number or as numbers separated by commas, such as '1,5'."}, 
+                "status_code": MESSAGE_TYPE_AND_STATUS_CODE[error_or_warning]}
 
 
 def validate_parameters_to_fetch_posts(parameters):
@@ -30,10 +38,16 @@ def validate_parameters_to_fetch_posts(parameters):
         if parameter in PARAMETERS_ACCEPTED_VALUES:
             acceptable = PARAMETERS_ACCEPTED_VALUES[parameter]
             if value not in acceptable:
-                return {"error": f"Unacceptable value for {parameter} query parameter.  We only accept one of {acceptable}."}
+                error_or_warning = "error"
+                return {"success": False, 
+                        "message": {error_or_warning: f"Unacceptable value for {parameter} query parameter.  We only accept one of {acceptable}."}, 
+                        "status_code": MESSAGE_TYPE_AND_STATUS_CODE[error_or_warning]}
     author_ids: str = parameters.get("authorIds", None)
     if author_ids is None:
-        return {"error": "Please identify author(s) using the query parameter key `authorIds`."}
+        error_or_warning = "error"
+        return {"success": False, 
+                "message": {error_or_warning: "Please identify author(s) using the query parameter key `authorIds`."}, 
+                "status_code": MESSAGE_TYPE_AND_STATUS_CODE[error_or_warning]}
     
     # Either 400 with error message, 200 with warning message, or no problem
     else:

@@ -55,13 +55,11 @@ def fetch_posts():
     parameters = request.args
 
     # Handle errors in query parameter inputs from user
-    result_of_parameter_checks = helpers_to_fetch_posts.validate_parameters_to_fetch_posts(parameters)
-    if "error" in result_of_parameter_checks:
-        return jsonify(result_of_parameter_checks), 400
-    elif "warning" in result_of_parameter_checks:
-        return jsonify(result_of_parameter_checks), 200
+    result_of_check = helpers_to_fetch_posts.validate_parameters_to_fetch_posts(parameters)
+    if not result_of_check["success"]:        
+        return jsonify(result_of_check["message"]), result_of_check["status_code"]
     else:
-        parsed_author_ids = result_of_parameter_checks["parsed_author_ids"]
+        parsed_author_ids = result_of_check["parsed_author_ids"]
         
     sort_by: str = parameters.get("sortBy", "id")
 
@@ -82,18 +80,17 @@ def update_post(postId):
     Update blog post, if it exists in the database.  Return updated blog post.
     """
     # validation
-    result_of_post_id_check = helpers_to_update_post.validate_post_id(post_id=postId)
-    if "error" in result_of_post_id_check:
-        return jsonify(result_of_post_id_check), 400
-    elif "warning" in result_of_post_id_check:
-        return jsonify(result_of_post_id_check), 200
+    result_of_post_check = helpers_to_update_post.validate_post_id(post_id=postId)
+    if not result_of_post_check["success"]:        
+        return jsonify(result_of_post_check["message"]), result_of_post_check["status_code"]
     else:
-        post = result_of_post_id_check["post"]
+        post = result_of_post_check["post"]
 
     user = g.get("user")
     
-    if "error" in helpers_to_update_post.validate_user_for_post_update(user, post):
-        return jsonify(helpers_to_update_post.validate_user_for_post_update(user, post)), 401
+    result_of_user_check = helpers_to_update_post.validate_user_for_post_update(user, post)
+    if not result_of_user_check["success"]:        
+        return jsonify(result_of_user_check["message"]), result_of_user_check["status_code"]
 
     # Update post
 

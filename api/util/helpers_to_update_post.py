@@ -2,22 +2,31 @@ from db.shared import db
 from db.models.user import User
 from db.models.post import Post
 from db.models.user_post import UserPost
+from constants import MESSAGE_TYPE_AND_STATUS_CODE
 
 
 def validate_post_id(post_id):
     try:
         post = Post.get_post_by_post_id(int(post_id))
         if post is None:
-            return {"warning": "The post you requested does not exist in the database."}
+            error_or_warning = "warning"
+            return {"success": False, 
+                    "message": {error_or_warning: "The post you requested does not exist in the database."}, 
+                    "status_code": MESSAGE_TYPE_AND_STATUS_CODE[error_or_warning]}
         else:
-            return {"post": post}
+            return {"success": True, "post": post}
     except:
-        return {"error": "Please use a number to represent the id of the post you want to update.  A sample acceptable path: /api/posts/1 versus a sample unacceptable path: /api/posts/one"}
+        error_or_warning = "error"
+        return {"success": False, 
+                "message": {error_or_warning: "Please use a number to represent the id of the post you want to update.  A sample acceptable path: /api/posts/1 versus a sample unacceptable path: /api/posts/one"},
+                "status_code": MESSAGE_TYPE_AND_STATUS_CODE[error_or_warning]}
 
 
 def validate_user_for_post_update(user, post):
     if user.id not in [author.id for author in post.users]:
-        return {"error": "Only an author of a post can update that post."}
+        return {"success": False, 
+                "message": {"error": "Only an author of a post can update that post."},
+                "status_code": 401}
     return {"success": True}
 
 
