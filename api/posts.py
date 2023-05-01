@@ -89,10 +89,11 @@ def update_post(postId):
         return jsonify(result_of_post_id_check), 200
     else:
         post = result_of_post_id_check["post"]
-        
+
     user = g.get("user")
-    if user.id not in [author.id for author in post.users]:
-        return jsonify({"error": "Only an author of a post can update that post."}), 401
+    
+    if "error" in helpers_to_update_post.validate_user_for_post_update(user, post):
+        return jsonify(helpers_to_update_post.validate_user_for_post_update(user, post)), 401
 
     # Update post
 
@@ -100,41 +101,22 @@ def update_post(postId):
     print(post.tags)
     print(post.text)
 
-    data = request.get_json(force=True)
-    if "authorIds" in data:
-        author_ids = data["authorIds"]
+    parsed_json = request.get_json(force=True)
+    if "authorIds" in parsed_json:
+        result_of_update_authors = helpers_to_update_post.update_author_ids_of_post(post=post, parsed_json=parsed_json)
+        if "error" in result_of_update_authors:
+            return jsonify(result_of_update_authors), 400
+  
+    if "tags" in parsed_json:
+        result_of_update_tags = helpers_to_update_post.update_tags_of_post(post=post, parsed_json=parsed_json)
+        if "error" in result_of_update_tags:
+            return jsonify(result_of_update_tags), 400
 
-        if type(author_ids) is not list:
-            return jsonify({"error": "Please use square brackets around the ids of the author(s) who should be the author(s) of the post you wish to update.  A sample acceptable input for authorIds: [1, 5] versus a sample unacceptable input for authorIds: 1,5"}), 400
+    if "text" in parsed_json:
+        result_of_update_text = helpers_to_update_post.update_text_of_post(post=post, parsed_json=parsed_json)
+        if "error" in result_of_update_text:
+            return jsonify(result_of_update_text), 400
 
-        deduplicated_author_ids = set(author_ids)
-
-        for author_id in deduplicated_author_ids:
-            if type(author_id) is not int:
-                return jsonify({"error": "Please check that each of your authorIds is a number."}), 400
-
-        if len(author_ids) != len(User.query.filter(User.id.in_(author_ids)).all()):
-            return jsonify({"error": "One or more authorIds provided is invalid.  Please check that each of your authorIds is an id of a user in the database."}), 400
-        
-        UserPost.query.filter_by(post_id=postId).delete()
-        for author_id in deduplicated_author_ids:
-            user_post = UserPost(user_id=author_id, post_id=postId)
-            db.session.add(user_post)
-    if "tags" in data:
-        tags = data["tags"]
-        if type(tags) is not list:
-            return jsonify({"error": "Please use square brackets around the tag(s) that you want on the post.  Format your input for tags as an array of strings."}), 400
-
-        for tag in tags:
-            if type(tag) is not str:
-                return jsonify({"error": "Please check that each tag is a string."}), 400
-            
-        post.tags = tags
-    if "text" in data:
-        text = data["text"]
-        if type(text) is not str:
-            return jsonify({"error": "Please input the post text as a string."}), 400
-        post.text = text
     db.session.commit()
 
     post = Post.get_post_by_post_id(postId)
