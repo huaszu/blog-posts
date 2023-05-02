@@ -92,6 +92,12 @@ def update_post(postId):
     if not result_of_user_check["success"]:        
         return jsonify(result_of_user_check["message"]), result_of_user_check["status_code"]
 
+    raw_data = request.data
+
+    result_of_raw_data_check = helpers_to_update_post.validate_data_present(raw_data=raw_data)
+    if not result_of_raw_data_check["success"]:        
+        return jsonify(result_of_raw_data_check["message"]), result_of_raw_data_check["status_code"]
+
     # Update post
 
     print(post.users)

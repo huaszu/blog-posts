@@ -31,6 +31,15 @@ def validate_user_for_post_update(user, post):
     return {"success": True}
 
 
+def validate_data_present(raw_data):
+    if raw_data is None:
+        error_or_warning = "error"
+        return {"success": False, 
+                "message": {"error": "Please use --data-raw option to pass a JSON payload in the body of your request to indicate modifications."},
+                "status_code": MESSAGE_TYPE_AND_STATUS_CODE[error_or_warning]}
+    return {"success": True}        
+
+
 def update_author_ids_of_post(post, parsed_json):
     author_ids = parsed_json["authorIds"]
 
