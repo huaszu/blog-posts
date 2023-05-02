@@ -101,18 +101,18 @@ def update_post(postId):
     parsed_json = request.get_json(force=True)
     if "authorIds" in parsed_json:
         result_of_update_authors = helpers_to_update_post.update_author_ids_of_post(post=post, parsed_json=parsed_json)
-        if "error" in result_of_update_authors:
-            return jsonify(result_of_update_authors), 400
+        if not result_of_update_authors["success"]:
+            return jsonify(result_of_update_authors["message"]), result_of_update_authors["status_code"]
   
     if "tags" in parsed_json:
         result_of_update_tags = helpers_to_update_post.update_tags_of_post(post=post, parsed_json=parsed_json)
-        if "error" in result_of_update_tags:
-            return jsonify(result_of_update_tags), 400
+        if not result_of_update_tags["success"]:
+            return jsonify(result_of_update_tags["message"]), result_of_update_tags["status_code"]
 
     if "text" in parsed_json:
         result_of_update_text = helpers_to_update_post.update_text_of_post(post=post, parsed_json=parsed_json)
-        if "error" in result_of_update_text:
-            return jsonify(result_of_update_text), 400
+        if not result_of_update_text["success"]:
+            return jsonify(result_of_update_text["message"]), result_of_update_text["status_code"]
 
     db.session.commit()
 
