@@ -2,7 +2,7 @@ from db.shared import db
 from db.models.post import Post
 from db.utils import rows_to_list
 from constants import MESSAGE_TYPE_AND_STATUS_CODE
-from repository import query_database
+from repository import database_operations
 
 
 PARAMETERS_ACCEPTED_VALUES = {"sortBy": ["id", "reads", "likes", "popularity"],
@@ -12,7 +12,7 @@ PARAMETERS_ACCEPTED_VALUES = {"sortBy": ["id", "reads", "likes", "popularity"],
 def check_user_exists(user_id):
     """Check by user id whether or not a user exists."""
 
-    return query_database.get_user_by_id(user_id=user_id) is not None
+    return database_operations.get_user_by_id(user_id=user_id) is not None
 
 
 def parse_author_ids(author_ids):

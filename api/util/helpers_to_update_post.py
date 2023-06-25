@@ -1,7 +1,5 @@
 from db.shared import db
-from db.models.user import User
 from db.models.post import Post
-from db.models.user_post import UserPost
 from constants import MESSAGE_TYPE_AND_STATUS_CODE
 from repository import database_operations
 
