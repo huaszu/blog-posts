@@ -3,6 +3,7 @@ from db.models.user import User
 from db.models.post import Post
 from db.models.user_post import UserPost
 from constants import MESSAGE_TYPE_AND_STATUS_CODE
+from repository import database_operations
 
 
 def validate_post_id(post_id):
@@ -58,15 +59,15 @@ def update_author_ids_of_post(post, parsed_json):
                 "message": {error_or_warning: "Please check that each of your authorIds is a number."},
                 "status_code": MESSAGE_TYPE_AND_STATUS_CODE[error_or_warning]}
 
-    if len(author_ids) != len(User.query.filter(User.id.in_(author_ids)).all()):
+    if len(author_ids) != len(database_operations.filter_users_by_id(user_ids=author_ids)):
         error_or_warning = "error"
         return {"success": False, 
                 "message": {error_or_warning: "One or more authorIds provided is invalid.  Please check that each of your authorIds is an id of a user in the database."},
                 "status_code": MESSAGE_TYPE_AND_STATUS_CODE[error_or_warning]}
 
-    UserPost.query.filter_by(post_id=post.id).delete()
+    database_operations.filter_user_posts_by_post_id(post_id=post.id).delete()
     for author_id in deduplicated_author_ids:
-        user_post = UserPost(user_id=author_id, post_id=post.id)
+        user_post = database_operations.create_user_post(user_id=author_id, post_id=post.id)
         db.session.add(user_post)
     return {"success": True}
 
