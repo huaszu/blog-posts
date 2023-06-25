@@ -41,14 +41,16 @@ class Post(db.Model):
     def get_sorted_posts_by_user_ids(user_ids: set, sort_by: str, direction: str) -> list:
         query = Post.query.join(Post.users).filter(User.id.in_(user_ids)).distinct()
 
+        is_descending = direction == "desc"
+
         if sort_by == "reads":
-            query = query.order_by(desc(Post.reads) if direction == "desc" else Post.reads)
+            query = query.order_by(desc(Post.reads) if is_descending else Post.reads)
         elif sort_by == "likes":
-            query = query.order_by(desc(Post.likes) if direction == "desc" else Post.likes)
+            query = query.order_by(desc(Post.likes) if is_descending else Post.likes)
         elif sort_by == "popularity":
-            query = query.order_by(desc(Post.popularity) if direction == "desc" else Post.popularity)
+            query = query.order_by(desc(Post.popularity) if is_descending else Post.popularity)
         else:
-            query = query.order_by(desc(Post.id) if direction == "desc" else Post.id)
+            query = query.order_by(desc(Post.id) if is_descending else Post.id)
 
         return query.all()
 
