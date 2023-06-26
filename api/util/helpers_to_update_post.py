@@ -63,7 +63,7 @@ def update_author_ids_of_post(post, parsed_json):
                 "message": {error_or_warning: "One or more authorIds provided is invalid.  Please check that each of your authorIds is an id of a user in the database."},
                 "status_code": MESSAGE_TYPE_AND_STATUS_CODE[error_or_warning]}
 
-    database_operations.filter_user_posts_by_post_id(post_id=post.id).delete()
+    database_operations.delete_user_post_by_post_id(post_id=post.id)
     for author_id in deduplicated_author_ids:
         user_post = database_operations.create_user_post(user_id=author_id, post_id=post.id)
         db.session.add(user_post)

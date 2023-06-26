@@ -1,8 +1,6 @@
 from db.shared import db
 from db.models.user import User
-from db.models.post import Post
 from db.models.user_post import UserPost
-from db.utils import rows_to_list
 
 
 def get_user_by_id(user_id):
@@ -17,10 +15,11 @@ def filter_users_by_id(user_ids):
     return User.query.filter(User.id.in_(user_ids)).all()
 
 
-def filter_user_posts_by_post_id(post_id):
-    """Filter user posts by post id."""
+def delete_user_post_by_post_id(post_id):
+    """Delete user post by post id."""
 
-    return UserPost.query.filter_by(post_id)
+    UserPost.query.filter_by(post_id=post_id).delete()
+    db.session.commit()
 
 
 def create_user_post(user_id, post_id):
