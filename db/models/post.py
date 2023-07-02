@@ -53,7 +53,7 @@ class Post(db.Model):
             query = query.order_by(desc(Post.id) if is_descending else Post.id)
 
         return query.all()
-
+    
     @staticmethod
-    def get_post_by_post_id(post_id):
+    def get_post_by_post_id(post_id: int):
         return Post.query.get(post_id)
