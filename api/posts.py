@@ -60,7 +60,6 @@ def fetch_posts():
     result = helpers_to_fetch_posts.display_posts(parsed_author_ids=parsed_author_ids, 
                                                   sort_by=sort_by, 
                                                   direction=direction)
-
     return jsonify({"posts": result}), 200
 
 
@@ -81,7 +80,8 @@ def update_post(postId: str):
     helpers_to_update_post.validate_data_present(raw_data=request.data)
 
     parsed_json = request.get_json(force=True)
-
+    
     # Update post and return specified response
-    return jsonify({"post": helpers_to_update_post.generate_updated_post_response(existing_post=existing_post, 
-                                                                                  parsed_json=parsed_json)}), 200
+    result = helpers_to_update_post.generate_updated_post_response(existing_post=existing_post, 
+                                                                   parsed_json=parsed_json)
+    return jsonify({"post": result}), 200
