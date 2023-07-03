@@ -1,6 +1,24 @@
 # Roles
 
+## Part 3: Written Evaluation
+Lastly, please provide a markdown file with the answers to the following questions below.
+
+The product team has decided that we want to make a change to this application such that authors of a blog post can have different roles:
+
+Authors can be owners, editors, or viewers of a blog post. For any blog post, there must always be at least one owner of the blog post. Only owners of a blog post can modify the authors' list to a blog post (adding more authors, changing their role).
+Questions:
+
 1. What database changes would be required to the starter code to allow for different roles for authors of a blog post? Imagine that we’d want to also be able to add custom roles and change the permission sets for certain roles on the fly without any code changes.
+2. How would you have to change the PATCH route given your answer above to handle roles?
+
+### Considerations
+- Please format your answers so that they are easy to digest, and do not include any code in your pull request related to these questions above. We will be evaluating both the quality of your answer as well as the quality of your written explanation of that answer.
+- Please include a file in the root of the repo called roles-proposal.md that addresses these questions.
+
+## Response 
+
+### 1. 
+#### What database changes would be required to the starter code to allow for different roles for authors of a blog post? Imagine that we’d want to also be able to add custom roles and change the permission sets for certain roles on the fly without any code changes.
 
 Given the scoping of this request from the product team, let's assume that we are concerned with managing what a user can do on a blog post when the user is an author of that post.  We assume that we are solving for places in the code where there is already or will be code that checks that a user is an author of a post - given that, we are now figuring out how to guide what a particular author can do.  We could make changes to enable the database to keep track of what roles are possible, what each role's permission set is, and which roles each author has.  In one potential implementation, 
 
@@ -46,7 +64,8 @@ We may want to enforce that every record have a non-null value for `user_role`. 
 
 Let's require that the value for `user_role` be from among the roles in the `role` table.  If at the point of `user_role` assignment, a user wants to create an entirely new role, we can plan for the circumstances when that should or should not be enabled in our business context and put in place a process or tooling that considers security and the user experience. 
 
-2. How would you have to change the PATCH route given your answer above to handle roles?
+### 2. 
+#### How would you have to change the PATCH route given your answer above to handle roles?
 
 If the request body includes `authorIds`, then the route should check that the user making the request has access to edit the authors' list.  After the existing code that validates that the user is an author of the post, we need code that looks up in the `user_post` table the user making the request by `user_id` and the post the request is for by `post_id` and finds out what `user_role` is at play for this user for this post.  
 
