@@ -1,81 +1,117 @@
 # Roles
 
-## Part 3: Written Evaluation
-Lastly, please provide a markdown file with the answers to the following questions below.
+## Table of Contents
+- [Question 1](#question-1)
+- [Question 2](#question-2)
+- [Alternatives considered](#alternatives-considered)
+- [Adjacent concerns](#adjacent-concerns)
+- [Footnotes](#footnotes)
 
-The product team has decided that we want to make a change to this application such that authors of a blog post can have different roles:
+## Question 1 
+### What database changes would be required to the starter code to allow for different roles for authors of a blog post? Imagine that we’d want to also be able to add custom roles and change the permission sets for certain roles on the fly without any code changes.
 
-Authors can be owners, editors, or viewers of a blog post. For any blog post, there must always be at least one owner of the blog post. Only owners of a blog post can modify the authors' list to a blog post (adding more authors, changing their role).
-Questions:
+Given the scoping of this request from the product team, let's assume that we are concerned with managing what a user can do on a blog post when the user is an author of that post.  We assume that we are solving for places in the code where there is already or will be code that checks that a user is an author of a post - given that, we are now figuring out how to guide what a particular author can do.  
 
-1. What database changes would be required to the starter code to allow for different roles for authors of a blog post? Imagine that we’d want to also be able to add custom roles and change the permission sets for certain roles on the fly without any code changes.
-2. How would you have to change the PATCH route given your answer above to handle roles?
+Many web frameworks have role-based access control (RBAC) libraries available that we should use because security is so important and difficult.  See [below](#flask-rbac-module) for information regarding Flask’s RBAC module.  For the purpose of this exercise, here is a hand-written solution: 
 
-### Considerations
-- Please format your answers so that they are easy to digest, and do not include any code in your pull request related to these questions above. We will be evaluating both the quality of your answer as well as the quality of your written explanation of that answer.
-- Please include a file in the root of the repo called roles-proposal.md that addresses these questions.
+I propose changes to enable the database to keep track of what roles are possible, what each role's permission set is, and which roles each author has.  Here is an implementation: 
 
-## Response 
+- Introduce `role_permissions`, `role_name`, `capability` tables that help us track what each role's permission set is.  To start, we have `owner`, `editor`, and `viewer` roles, per the question prompt.  In this example, a role can have one or more capabilities.  A capability is represented by the name of a function in the code that the role has permission to run[^1]. To meet the product requirement that **only owners of a blog post can modify the authors' list to a blog post (adding more authors, changing their role)**, we see that only `owner` has permission to `/repository_layer/database_operations.py/update_author_ids_of_post`: 
 
-### 1. 
-#### What database changes would be required to the starter code to allow for different roles for authors of a blog post? Imagine that we’d want to also be able to add custom roles and change the permission sets for certain roles on the fly without any code changes.
+`role_name`
+| role_id         | role_name       |
+|-----------------|-----------------|
+| 1               | owner           | 
+| 2               | editor          |   
+| 3               | viewer          |
 
-Given the scoping of this request from the product team, let's assume that we are concerned with managing what a user can do on a blog post when the user is an author of that post.  We assume that we are solving for places in the code where there is already or will be code that checks that a user is an author of a post - given that, we are now figuring out how to guide what a particular author can do.  We could make changes to enable the database to keep track of what roles are possible, what each role's permission set is, and which roles each author has.  In one potential implementation, 
+`role_id`: primary key.  `role_name` cannot be null. 
 
-- We could introduce a `role` table that keeps track of what each role's permission set is.  In this implementation, we focus on permission to read, edit, create, or delete records in tables in the database.  To start, `owner`, `editor`, and `viewer` can be example roles, per the question prompt.  In this sample, if we look at the `create` column for the record for `owner`, an owner can create a new association between a user and a post in the `user_post` table, meaning that an owner can add a user as an author of a post.  To meet the product requirement that **only owners of a blog post can modify the authors' list to a blog post (adding more authors, changing their role)**, an excerpt of the `role` table could look like: 
+Having a separate `role_name` table prevents repeating role names in the rows of the `role_permissions` table and enables clarity in the future as we evolve the roles, add roles, or want to change what a role is named. 
 
-| role_id         | role_name       | read             | edit             | create           | delete           |
-|-----------------|-----------------|------------------|------------------|------------------|------------------|
-| 1               | owner           | [user_post, post]| [user_post, post]| [user_post, post]| [user_post, post]|   
-| 1               | editor          | [post]           | [post]           | []               | []               |    
-| 1               | viewer          | [post]           | []               | []               | []               |  
+`capability`
+| capability_id   | function_name                |
+|-----------------|------------------------------|
+| 1               | update_author_ids_of_post    | 
+| 2               | update_tags_of_post          |   
+| 3               | update_text_of_post          |
 
-I considered having names of tables as columns - instead of having capabilities as columns `read`, `edit`, `create`, and `delete` - in which case values could be an array indicating a role's capabilities in relation to each table.  However, this other way makes less sense if there are more and more tables to regulate access for and we keep having to add columns to the `role` table. 
+`capability_id`: primary key.  `function` cannot be null. 
 
-Given that this implementation represents access at a table level, we should enforce that the values for `read`, `edit`, `create`, and `delete` can only include elements that are the string name of a database table.  An aside: depending on the database we are using, there may be features of the database that we can take advantage of to help us govern access to tables. 
+`role_permissions`
+| role_id         | capability_id  |
+|-----------------|----------------|
+| 1               | 1              | 
+| 1               | 2              |   
+| 1               | 3              |
+| 2               | 1              |   
+| 2               | 2              | [^2]
 
-Since we care about ability to **add custom roles and change the permission sets for certain roles on the fly**, I decided to go with a separate `role` table that represents each role's permission set, and assigning each user a role in relation to each post, as opposed to more manually setting each user's permissions.  In the `role` table, we can add or delete roles and we can change the permission set of a role. 
+`role_id`: foreign key that references `role_id` from `role_name` table. 
+`capability_id`: foreign key that references `capability_id` from `capability` table. 
 
-Especially if roles proliferate, we may want to monitor this table so that we observe inefficiences and evidence of security concerns.  It would be alarming if all roles suddenly got access to create anything.  Also for instance, when there are two different role records that have the same permission set, it may be worthy to investigate why that happened and whether we want to allow for that.  There should be guidelines in place so that if a role gets deprecated, how do we treat the impact on users and have scalable ways to potentially reassign users responsibly? 
+Since we care about ability to **add custom roles and change the permission sets for certain roles on the fly**, I decided to go with a separate `role_permissions` table that represents each role's permission set, and assigning each user a role in relation to each post, as opposed to more manually setting each user's permissions.  We modify roles in the `role_permissions` table.
 
-A modification on this implementation could be to have an additionally separate `permission` table, which has all of the possible permissions.  Then the `role` table could have columns `role_id`, `role_name`, and `permission_set`, where a value for `permission_set` could for example be `[1, 2]` to show that the role has permissions `1` and `2` from the  `permission` table.  An excerpt of the `permission` table could look like:
+- Add a column to the `user_post` table that indicates the role of each user for each associated post.  This design is because we want to allow the same user to have different roles depending on which post is at hand.  A user can be only a viewer of one blog post while being an owner of a different blog post.  Here is how this suggested change to the `user_post` table could look:
 
-| permission_id | table_name    | capability    |       
-|---------------|---------------|---------------|
-| 1             | user_post     | read          |
-| 2             | user_post     | edit          |
+`user_post`
+| user_id      | post_id       | role_id |
+|--------------|---------------|---------|
+| 1            | 1             | 1       |
+| 2            | 1             | 1       |
+| 2            | 2             | 2       |
+| 2            | 3             | 2       |
+| 3            | 3             | 2       |
+| 3            | 4             | 3       | [^3]
 
-This alternative could help with easy visibility into what all of the possible permissions that exist are and potentially reporting on system vulnerability on a permission level, especially as the surface area over which permissions have to be managed grows.  We could speak with business stakeholders on the needs.  Of course, any change we make to the structure of database tables can affect how we write the code that traverses tables to get the intended information, such as code that checks whether a user has the permission to take an action or not.  
+Enforce that every record have a non-null value for `role_id`.  For example, at the point of `user_post` record creation, we could set a default that the `role_id` is `3`, corresponding to `viewer` and offer ability to indicate a different role.  Depending on the role of the user who is wanting to indicate a different role, there may be limits on what roles we allow that user to give out.  We can speak with business and user experience stakeholders about the business logic - for example, if a user originated a post, perhaps this user should automatically be given an `owner` role, with `role_id` `1` for that post, which is one way to support the product requirement that **for any blog post, there must always be at least one owner of the blog post.**  In this solution, the program that adds a new post record to the `post` table and makes the pertinent updates to the `user_post` table could make that `role_id == 1` assignment to that user. There may be nuances, such as additional logic that initially makes this user's role `editor` and upgrades the role to `owner`, depending on whether or not the user has also verified their email or identity or taken other actions germane to the business context. 
 
-- We could add a column to the `user_post` table that indicates the role of each user for each associated post.  This design is because we want to allow the same user to have different roles depending on which post is at hand.  A user can be only a viewer of one blog post while being an owner of a different blog post.  Here is how this suggested change to the `user_post` table could look:
+Let's require that the value for `role_id` be from among the roles in the `role_name` table.  If at the point of `role_id` assignment for a `user_post` record, a user wants to create an entirely new role, we can plan for the circumstances when that should or should not be enabled in our business context and put in place a process or tooling that considers security and the user experience. 
 
-| user_id      | post_id       | user_role    |
-|--------------|---------------|--------------|
-| 1            | 1             | owner        |
-| 2            | 1             | owner        |
-| 2            | 2             | editor       |
-| 2            | 3             | editor       |
-| 3            | 3             | editor       |
-| 3            | 4             | viewer       |
+- Because **for any blog post, there must always be at least one owner of the blog post**, incorporate **model validation** so that every time the model is saved, check that each post has at least one author having an `owner` role.  Using SQLAlchemy's event system: Use `before_insert`, `before_update`, and `before_flush` event listeners to perform checks and when the validation fails, raise an exception with a useful message, such as "At least one author must have the role "owner" for every post."
 
-We are assuming that each user has one role in relation to a post.  If we foresee that a user may simultaneously need multiple roles, we can make the value for `user_role` be an array of roles. 
+- Encapsulate RBAC checks in a method in the `User` class so that callers can use `User.can_update_author_ids_of_post(post_id)` rather than having to know about the table structure: 
+A `User.can_update_author_ids_of_post(post_id)` method uses the `user_id` and the `post_id` to look up the `role_id` in the `user_post` table.  Then the method retrieves rows in the `role_permissions` table based on the `role_id`, obtains associated `capability_id` values, and refers to the `capability` table to retrieve capabilities associated with those `capability_id` values.  If "update_author_ids_of_post" is among the capabilities, then  `User.can_update_author_ids_of_post(post_id)` returns `True`.  
 
-We may want to enforce that every record have a non-null value for `user_role`.  For example, at the point of `user_post` record creation, we could set a default that the `user_role` is `viewer` and offer ability to indicate a different role.  Depending on the role of the user who is wanting to indicate a different role, there may be limits on what roles we allow that user to give out.  We can speak with business and user experience stakeholders about the business logic - for example, if a user originated a post, perhaps this user should automatically be given an `owner` role for that post, which is one way to address the product requirement that **for any blog post, there must always be at least one owner of the blog post.**  In this solution, the program that adds a new post record to the `post` table and makes the pertinent updates to the `user_post` table could make that `owner` assignment to that user. There may be nuances, such as additional logic that initially makes this user's role `editor` and upgrades the role to `owner`, depending on whether or not the user has also verified their email or identity or taken other actions relevant to the business context. 
+## Question 2 
+### How would you have to change the PATCH route given your answer above to handle roles?
 
-Let's require that the value for `user_role` be from among the roles in the `role` table.  If at the point of `user_role` assignment, a user wants to create an entirely new role, we can plan for the circumstances when that should or should not be enabled in our business context and put in place a process or tooling that considers security and the user experience. 
+The route currently calls a function `/api/util/helpers_to_update_post.py/generate_updated_post_response(existing_post, parsed_json)`, which calls `/api/util/helpers_to_update_post.py/update_post(post, parsed_json)`.  Within the `update_post(post, parsed_json)` function, we check `if "authorIds" in parsed_json`.  If the request body does include `authorIds`, then the route additionally checks that the user making the request has access to edit the authors' list.  Here is where we use the aforementioned `User.can_update_author_ids_of_post(post_id)` method.
 
-### 2. 
-#### How would you have to change the PATCH route given your answer above to handle roles?
+**Only if** this method returns `True`, the route proceeds to the rest of the flow processing updates to the authors' list, tags, and/or text of the post.  If not, give an **error message** with a 403 status code to the user.  Per REST best practices, 403 Forbidden is the appropriate code because we are refusing to authorize the request due to access that is tied to the application logic checking for sufficient rights.  We can have a dialogue with teammates to decide how specific the error messaging should be to both be secure and helpful.  Depending on the context, we simply let the user know that they do not have this capability, versus giving away precisely which role the user needs to have to get this capability, or explaining what the user's current capabilities include or exclude, because that could help a malicious actor make a series of requests and piece together information they should not know. 
 
-If the request body includes `authorIds`, then the route should check that the user making the request has access to edit the authors' list.  After the existing code that validates that the user is an author of the post, we need code that looks up in the `user_post` table the user making the request by `user_id` and the post the request is for by `post_id` and finds out what `user_role` is at play for this user for this post.  
+### Flask RBAC module
 
-In the existing code that updates the authors' list of a post - lines 30-41 in `/repository_layer/database_operations.py` - we call a function defined above on lines 18-21 that deletes from the `user_post` table and a function on lines 24-27 that creates in the `user_post` table.  We can add code that looks up the user role in the `role` table.  Before our program makes a change to the `user_post` table, the program should check whether the user role has access to make that change.  Specifically, is `user_post` one of the elements in the array of the `delete` value for that user role?  Is `user_post` one of the elements in the array of the `create` value for that user role?  While `user_post` shows up as a string in such an array, the connection between this string and the `user_post` table itself is that our model includes `__tablename__ = "user_post"` in the definition. 
+Relevant documentation: [docs](https://flask-rbac.readthedocs.io/en/latest/)
 
-Only if the access control allows, the route should proceed to the next step.  If not, give an error message with a 403 status code to the user.  Per REST best practices, 403 Forbidden is the appropriate code because we are refusing to authorize the request due to access that is tied to the application logic checking for sufficient rights.  We can have a dialogue with teammates to decide how specific the error messaging should be to both be secure and helpful.  Depending on the context, we may not want to give away precisely which role the user needs to have to get this capability, or explain what the user's current capabilities include or exclude, but simply let the user know that they do not have this capability. 
+Using this module would involve: 
+- Set `Role` Model: 
+  - Create a `Role` class that extends the `RoleMixin` provided by Flask-RBAC.
+  - Perform overrides recommended in documentation to work with SQLAlchemy and support saving roles to the database. 
+  - Define necessary fields, such as `id` and `name`.
+  - If applicable in the future, establish relationships between roles using parent-child relationships.
 
-In the case that the access control does allow us to proceed, we need to add a check because **for any blog post, there must always be at least one owner of the blog post**.  Among the `authorIds` array in the request body, check in the `user_post` table that at least one is a `user_id` with `user_role == "owner"` for the `post_id` at hand.  If not, that means going through with the request would make the post have no owners so we should reject the request and return an error message with a 400 status code.  Again, we can have conversation with teammates to decide how specific the error messaging should be to both be secure and helpful.  Depending on the context, we may not want to give away exactly that, of the `authorIds` in the request, none have `user_role` of `owner`, because someone could make a series of requests to identify who the owners are - could be an overbearing concern for simple blog posts but bringing it up as a point that can matter in context.  We could let the user know that the server understood the request and is not processing the update to the authors' list. 
+- Set `User` Model: 
+  - Extend the `UserMixin` provided by Flask-RBAC.
+  - Perform overrides recommended in documentation to work with SQLAlchemy.
+  - Establish a relationship between `User` and `Role` models, using a many-to-many relationship table to associate users with their roles. 
 
-If the requested change does not break the rule that there must always be at least one owner of a post, then the code can progress to work on the rest of the flow updating the authors' list, tags, and/or text of the post. 
+- Configure Flask-RBAC:
+  - Set the role model by calling `rbac.set_role_model(Role)` to use the custom `Role` model.
+  - Set the user model by calling `rbac.set_user_model(User)` to use the custom `User` model.
 
+## Alternatives considered
+I considered defining a capability as the capability to read a specific table, or to edit, delete, or create in a specific table.  Instead I chose an approach that allows for a capability to encompass multiple tables and/or operations.  Coupling permissions to database tables works well when the database directly models the domain.  However, we may want to express capabilities that do not fit that way, e.g., only allow `editor`s to send an email notification. 
 
-As a note, the proposal is more from a perspective of role-based access control, rather than attribute-based access control.  While I can imagine use cases in which we want granularity such that, for instance, a user can edit the `text` of a post but not the `reads` of a post, this is a different, though interconnected, problem from what the product team is coming to us now for. 
+## Adjacent concerns
+Depending on the database we are using, there may be features of the database that we can take advantage of to help us govern access to tables.  For example, PostgreSQL's [row security policies](https://www.postgresql.org/docs/current/ddl-rowsecurity.html) can restrict which rows a user can query, insert, update, or delete. 
+
+Let's **audit** the role information.  Comprehensive logs of changes to the contents of the tables covered above will help us to observe inefficiencies and investigate evidence of security concerns.  Reporting on system vulnerability can become especially important to mitigate risks as the surface area over which permissions have to be managed grows and as roles proliferate.  As an extreme example, it would be alarming if all roles suddenly got access to create anything.  Also for instance, when there are two different roles that have the same permission set, it may be worthy to understand why that happened and whether we want to allow or monitor for that.  There should be guidelines in place so that if a role gets deprecated, we are aware of the impact on users and have scalable ways to potentially reassign users responsibly. 
+
+#### Footnotes 
+
+[^1]: There are implementations besides correlating a capability with a function.  For example, a capability can be at an API endpoint level - perhaps only users with role `editor` or `owner` for a post should have access to our PATCH route. 
+
+[^2]: We see that `role_id` `1` has capability of `capability_id` `1`, `2`, or `3` and we present this permission set in three rows instead of in one row where we associate this role_id with a value that is an array of the three capabilities.  This decision is because of an effort to normalize the schema as much as possible and better support query performance. 
+
+[^3]: In this sample table, each user has one role in relation to a post.  If a user can simultaneously have multiple roles on a post - let's say if user with `user_id` `1` is an `owner` and a `fun_new_role`, where this role has `role_id == 4` on the post with `post_id` `1` - we can envision a row in the table of 1, 1, 1, which we already illustrate, and another row of 1, 1, 4. 
