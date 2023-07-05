@@ -12,7 +12,7 @@
 
 Given the scoping of this request from the product team, let's assume that we are concerned with managing what a user can do on a blog post when the user is an author of that post.  We assume that we are solving for places in the code where there is already or will be code that checks that a user is an author of a post - given that, we are now figuring out how to guide what a particular author can do.  
 
-Many web frameworks have role-based access control (RBAC) libraries available that we should use because security is so important and difficult.  See [below](#flask-rbac-module) for information regarding Flask’s RBAC module.  For the purpose of this exercise, here is a hand-written solution: 
+Many web frameworks have role-based access control (RBAC) libraries available that we should use because security is so important and difficult.  See [below](#flask-rbac-module) for information regarding Flask’s RBAC module.  For the purpose of this exercise, here is a handwritten solution: 
 
 I propose changes to enable the database to keep track of what roles are possible, what each role's permission set is, and which roles each author has.  Here is an implementation: 
 
