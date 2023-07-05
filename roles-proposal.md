@@ -36,16 +36,16 @@ Having a separate `role_name` table prevents repeating role names in the rows of
 | 2               | update_tags_of_post          |   
 | 3               | update_text_of_post          |
 
-`capability_id`: primary key.  `function` cannot be null. 
+`capability_id`: primary key.  `function_name` cannot be null. 
 
-`role_permissions`
+`role_permissions` [^2]
 | role_id         | capability_id  |
 |-----------------|----------------|
 | 1               | 1              | 
 | 1               | 2              |   
 | 1               | 3              |
 | 2               | 1              |   
-| 2               | 2              | [^2]
+| 2               | 2              | 
 
 `role_id`: foreign key that references `role_id` from `role_name` table. 
 `capability_id`: foreign key that references `capability_id` from `capability` table. 
@@ -54,7 +54,7 @@ Since we care about ability to **add custom roles and change the permission sets
 
 - Add a column to the `user_post` table that indicates the role of each user for each associated post.  This design is because we want to allow the same user to have different roles depending on which post is at hand.  A user can be only a viewer of one blog post while being an owner of a different blog post.  Here is how this suggested change to the `user_post` table could look:
 
-`user_post`
+`user_post` [^3]
 | user_id      | post_id       | role_id |
 |--------------|---------------|---------|
 | 1            | 1             | 1       |
@@ -62,7 +62,7 @@ Since we care about ability to **add custom roles and change the permission sets
 | 2            | 2             | 2       |
 | 2            | 3             | 2       |
 | 3            | 3             | 2       |
-| 3            | 4             | 3       | [^3]
+| 3            | 4             | 3       | 
 
 Enforce that every record have a non-null value for `role_id`.  For example, at the point of `user_post` record creation, we could set a default that the `role_id` is `3`, corresponding to `viewer` and offer ability to indicate a different role.  Depending on the role of the user who is wanting to indicate a different role, there may be limits on what roles we allow that user to give out.  We can speak with business and user experience stakeholders about the business logic - for example, if a user originated a post, perhaps this user should automatically be given an `owner` role, with `role_id` `1` for that post, which is one way to support the product requirement that **for any blog post, there must always be at least one owner of the blog post.**  In this solution, the program that adds a new post record to the `post` table and makes the pertinent updates to the `user_post` table could make that `role_id == 1` assignment to that user. There may be nuances, such as additional logic that initially makes this user's role `editor` and upgrades the role to `owner`, depending on whether or not the user has also verified their email or identity or taken other actions germane to the business context. 
 
@@ -110,7 +110,7 @@ Let's **audit** the role information.  Comprehensive logs of changes to the cont
 
 #### Footnotes 
 
-[^1]: There are implementations besides correlating a capability with a function.  For example, a capability can be at an API endpoint level - perhaps only users with role `editor` or `owner` for a post should have access to our PATCH route. 
+[^1]: There are implementations besides correlating a capability with a function.  For example, a capability can be at an API endpoint level - perhaps only users with role `editor` or `owner` for a post should have access to our PATCH route.  With capabilities being associated to functions, we will have to handle behaviors such as when engineers change function names. 
 
 [^2]: We see that `role_id` `1` has capability of `capability_id` `1`, `2`, or `3` and we present this permission set in three rows instead of in one row where we associate this role_id with a value that is an array of the three capabilities.  This decision is because of an effort to normalize the schema as much as possible and better support query performance. 
 
