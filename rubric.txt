@@ -1,0 +1,16 @@
+Instructions: Complete one project to proceed to the next steps. You'll receive tailored feedback on your programming skills and a recommendation on the best next step to get job ready.
+
+The goal of this assessment is to test your backend development skills.
+
+You will be building on top of a simple JSON API using Python (Flask). If you have never written a JSON API using those technologies before, this https://auth0.com/blog/developing-restful-apis-with-python-and-flask/ may be a good resource that may help you.
+
+The assessment involves building two new routes for a blog post API. Detailed instructions will be available once you click start. Your assessment will be graded based on this rubric. https://drive.google.com/file/d/103oOiqjxd_N1JckefKqPJjndqX1qvqdL/view
+
+FEEDBACK:
+WHAT YOU CAN EXPECT
+
+You will receive comprehensive review & feedback from our experienced engineers. You will also receive guidance on what to do next on the Feedback page.
+
+HOW LONG IT WILL NEED
+
+3 - 10 days

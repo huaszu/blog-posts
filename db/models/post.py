@@ -1,4 +1,5 @@
 from sqlalchemy.orm import validates
+from sqlalchemy import desc
 from ..shared import db
 from db.models.user import User
 
@@ -35,3 +36,24 @@ class Post(db.Model):
     def get_posts_by_user_id(user_id):
         user = User.query.get(user_id)
         return Post.query.with_parent(user).all()
+
+    @staticmethod
+    def get_sorted_posts_by_user_ids(user_ids: set, sort_by: str, direction: str) -> list:
+        query = Post.query.join(Post.users).filter(User.id.in_(user_ids)).distinct()
+
+        is_descending = direction == "desc"
+
+        if sort_by == "reads":
+            query = query.order_by(desc(Post.reads) if is_descending else Post.reads)
+        elif sort_by == "likes":
+            query = query.order_by(desc(Post.likes) if is_descending else Post.likes)
+        elif sort_by == "popularity":
+            query = query.order_by(desc(Post.popularity) if is_descending else Post.popularity)
+        else:
+            query = query.order_by(desc(Post.id) if is_descending else Post.id)
+
+        return query.all()
+    
+    @staticmethod
+    def get_post_by_post_id(post_id: int):
+        return Post.query.get(post_id)

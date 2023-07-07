@@ -22,6 +22,7 @@ def create_app():
         "DB_PATH", "sqlite:///database.db"
     )
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config['JSON_SORT_KEYS'] = False
     db.init_app(app)
 
     app.register_blueprint(api_blueprint, url_prefix="/api")

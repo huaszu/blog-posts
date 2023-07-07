@@ -164,3 +164,6 @@ cython_debug/
 
 # OS X
 .DS_Store
+
+# Scratch work
+scratch_work.txt
